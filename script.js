@@ -53,7 +53,7 @@ const gameBoard = ((doc)=>{
     let winningMove = "";
     let isWin;
     let endGame = false;
-    let 
+    
       
     function checkWin(you, cpu){
         winningMoves.find((move) => {
@@ -93,6 +93,7 @@ function Player(name, mark){
 
 gameBoard.initialize();
 const you = Player("You", "x");
-gameBoard.checkWin(you);
+const cpu = Player("CPU", "o");
+gameBoard.checkWin(you, cpu);
 
 console.log(you.name);
