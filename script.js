@@ -10,10 +10,6 @@ function Player(name, mark, nodeName) {
     let node = document.querySelector(nodeName);
     let isTurn = false;
   
-    const playTurn = (cellNode, cells) => {
-      let index = Array.from(cellNode.parentNode.children).indexOf(cellNode) - 1;
-      cells[index].setStatus(mark);
-    };
   
     return {
       get name() {
@@ -22,15 +18,12 @@ function Player(name, mark, nodeName) {
       upScore,
       mark,
       node,
-      playTurn,
+  
     };
   }
   
-  function CPUPlayer(name, mark, nodeName) {
-    const prototype = Player(name, mark, nodeName);
-    const makeChoice = () => {};
-  
-    return { ...prototype };
+  function cpuChoice(){
+
   }
 
 
@@ -38,13 +31,21 @@ function Player(name, mark, nodeName) {
 const gameBoard = ((doc) => {
   const templateCell = doc.querySelector("#template-cell");
   const boardNode = doc.querySelector(".container");
-  const outcomeNode = doc.querySelector(".outcome");
+  
   const menuNode = doc.querySelector(".menu-box");
   const startButton = doc.querySelector(".start-button");
-  const turnInfo = doc.querySelector("turn-info");
+  const restartButton = doc.querySelector(".restart-button");
+  const outcomeNode = doc.querySelector(".outcome");
+  const turnInfo = doc.querySelector(".turn-info");
+  let turnCounter = 1;
   let player1;
   let player2;
   let players;
+  let cpuMode = false;
+
+  let winningMove = "";
+  let isWin;
+  let endGame = false;
   
   function Cell() {
     let status = "";
@@ -65,13 +66,26 @@ const gameBoard = ((doc) => {
   const cells = [];
   let currPlayerIDX = 0;
 
+  const markCase = (cellNode, player) => {
+    let index = Array.from(cellNode.parentNode.children).indexOf(cellNode) - 1;
+    console.log("Index : " + index);
+    cells[index].setStatus(player.mark);
+    
+  };
+
   const initialize = () => {
-    if(cells.length > 0) cells.length = 0;
+    endGame = false;
+    turnCounter = 1;
+    if(cells.length > 0) {
+      cells.forEach(cell=> boardNode.removeChild(cell.node));
+      cells.length = 0;
+      
+    }
     for (let i = 0; i < 9; i += 1) {
       cells.push(Cell());
-      if (i >= 3 && i <= 5) cells[cells.length - 1].setStatus("");
-      else cells[cells.length - 1].setStatus("");
+      
     }
+    
   };
 
   function setPlayerName(inputName){
@@ -82,16 +96,27 @@ const gameBoard = ((doc) => {
 
   startButton.addEventListener("click", () => {
     menuNode.classList.toggle("hidden");
+    cpuMode = menuNode.querySelector("#mode").value;
     initialize();
     
     player1 = Player(setPlayerName("#name-player1"), "X");
     player2 = Player(setPlayerName("#name-player2"), "O");
     players = [player1, player2];
-    gameBoard.play(players);
+    
+    gameBoard.play();
     // const cpu = CPUPlayer("CPU", "o");
 
-    console.log(player1.name);
+  
   });
+
+  (function restartGame(){
+    restartButton.addEventListener("click", () => {
+      menuNode.classList.toggle("hidden");
+      initialize();
+      gameBoard.play(players);
+      currPlayerIDX = 0;
+  });
+  })();
 
   const winningMoves = [
     [1, 2, 3], // Row 1
@@ -103,25 +128,36 @@ const gameBoard = ((doc) => {
     [1, 5, 9], // Diagonal 1
     [3, 5, 7], // Diagonal 2
   ];
-  let winningMove = "";
-  let isWin;
-  let endGame = false;
+  
+  function stopGame(winMsg){
+      menuNode.classList.toggle("hidden");
+      restartButton.parentNode.classList.toggle("hidden", false);
+      startButton.parentNode.classList.toggle("hidden", true);
+
+      outcomeNode.textContent = winMsg;
+      endGame = true;
+  }
 
   function checkWin(you, cpu) {
+
+    
+
     winningMoves.find((move) => {
       let line = "";
+      console.log("Turn : " + turnCounter);
+
+      
 
       move.forEach((i) => {
-        console.log("Case : " + i);
+       
         line += cells[i - 1].getStatus();
-        console.log(line);
+        
       });
 
       if (line.match(/X{3}|O{3}/)) {
         winningMove = move.join();
-        console.log("We Have A Solution! : " + winningMove);
         let winner;
-        console.log("Move : " + move[0]);
+
         if (line[0] === you.mark) {
           isWin = true;
           winner = you;
@@ -130,28 +166,47 @@ const gameBoard = ((doc) => {
           winner = cpu;
         }
         winner.upScore();
-        outcomeNode.textContent = `${winner.name} wins!`;
-        
-        endGame = true;
+        console.log("Someone Won");
+        stopGame(`${winner.name} wins!`);
         return true;
       }
+      
+      
       return false;
     });
   }
+  
+  function playerAction(targetCase, cell){
+    if(!cell.getStatus() && !endGame){
+      const player = players[currPlayerIDX];
+      console.log("test : " + targetCase);
+      markCase(targetCase, player);
+      checkWin(...players);
+      if(!endGame){
+        
+        if(turnCounter == 9){
+          console.log("FINISH");
+          stopGame("It's a tie");
+          return;
+        }
+        console.log(currPlayerIDX);
+        currPlayerIDX = +(!currPlayerIDX);
+        turnInfo.textContent = `It's ${players[currPlayerIDX].name} turn!`;
+        turnCounter += 1;
+      }      
+  }
+  }
 
+  function play() {
 
-  function play(players) {
+    turnInfo.textContent = `It's ${players[0].name} turn!`
     console.log(cells[0].node);
     cells.forEach((cell) =>
       cell.node.addEventListener("click", (e) => {
-        if(!cell.getStatus() && !endGame){
-            const player = players[currPlayerIDX];
-            player.playTurn(e.target, cells);
-            checkWin(...players);
-            currPlayerIDX = +(!currPlayerIDX);
-        }
-      })
-    );
+        playerAction(e.target, cell);
+        
+      }
+      ));
   }
 
   return { initialize, checkWin, play };

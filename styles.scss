@@ -15,7 +15,7 @@ body{
     
     display: flex;
     padding: 0 50px;
-    .player1{
+    .player2{
         order: 3;
     }
 }
@@ -50,7 +50,7 @@ body{
     top: 0;
     left: 0;
     display: grid;
-    &.hidden{
+    &.hidden, .start.hidden, .restart.hidden{
         display: none;
     }
     &::before{
@@ -66,7 +66,9 @@ body{
         height: 100%;
         
     }
-    .start{
+
+    
+    %menu-context{
         display: flex;
         flex-direction: column;
         justify-content: center;
@@ -76,6 +78,12 @@ body{
         height: 30%;
         background-color:azure;
         place-self: center;
+        
+    }
+
+   
+    .start{
+        @extend %menu-context; 
         #mode{
             position: relative;
             appearance: none;
@@ -107,4 +115,15 @@ body{
         }
 
     }
+
+    .restart{
+        @extend %menu-context;
+    }
+    button{
+
+        width : 6rem;
+        height: 2rem;
+        align-self : center;
+    }
+    
 }
