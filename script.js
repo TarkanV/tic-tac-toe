@@ -22,11 +22,6 @@ function Player(name, mark, nodeName) {
     };
   }
   
-  function cpuChoice(){
-
-  }
-
-
 
 const gameBoard = ((doc) => {
   const templateCell = doc.querySelector("#template-cell");
@@ -96,7 +91,8 @@ const gameBoard = ((doc) => {
 
   startButton.addEventListener("click", () => {
     menuNode.classList.toggle("hidden");
-    cpuMode = menuNode.querySelector("#mode").value;
+    cpuMode = menuNode.querySelector("#mode").checked;
+    console.log("CPU Mode : " + cpuMode);
     initialize();
     
     player1 = Player(setPlayerName("#name-player1"), "X");
@@ -176,11 +172,11 @@ const gameBoard = ((doc) => {
     });
   }
   
-  function playerAction(targetCase, cell){
+  function playerAction(cell){
     if(!cell.getStatus() && !endGame){
       const player = players[currPlayerIDX];
-      console.log("test : " + targetCase);
-      markCase(targetCase, player);
+      console.log("test : " + cell.node);
+      markCase(cell.node, player);
       checkWin(...players);
       if(!endGame){
         
@@ -197,13 +193,23 @@ const gameBoard = ((doc) => {
   }
   }
 
+  function cpuChoice(){
+    const freeCells = cells.filter((cell) => !cell.getStatus());
+    const randomCell = Math.floor(Math.random() * freeCells.length);
+    console.log(randomCell);
+    return freeCells[randomCell];
+  }
+  
+
   function play() {
 
     turnInfo.textContent = `It's ${players[0].name} turn!`
     console.log(cells[0].node);
     cells.forEach((cell) =>
       cell.node.addEventListener("click", (e) => {
-        playerAction(e.target, cell);
+        playerAction(cell);
+        if(cpuMode && !endGame)
+          playerAction(cpuChoice());
         
       }
       ));
@@ -213,7 +219,7 @@ const gameBoard = ((doc) => {
 })(document);
 
 
-// Player constructor
+
 
 
 
